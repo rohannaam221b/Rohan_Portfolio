@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Unique Gooey Nav</title>
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #0f0f0f;
+      font-family: sans-serif;
+    }
+
+    nav {
+      display: flex;
+      gap: 2rem;
+      background: rgba(255,255,255,0.05);
+      padding: 1rem 2rem;
+      border-radius: 50px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+      position: relative;
+      overflow: hidden;
+    }
+
+    nav a {
+      position: relative;
+      color: white;
+      text-decoration: none;
+      font-size: 1.2rem;
+      padding: 0.5rem 1rem;
+      border-radius: 30px;
+      transition: 0.3s;
+      cursor: pointer;
+    }
+
+    nav a:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .drop {
+      position: absolute;
+      border-radius: 50%;
+      pointer-events: none;
+      transform: scale(0);
+      opacity: 0.8;
+      animation: dropAnim 0.6s ease-out forwards;
+    }
+
+    @keyframes dropAnim {
+      to {
+        transform: scale(6);
+        opacity: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="#">Home</a>
+    <a href="#">Services</a>
+    <a href="#">Portfolio</a>
+    <a href="#">About</a>
+    <a href="#">Contact</a>
+  </nav>
+
+  <script>
+    const colors = ["#ff477e", "#47ffa2", "#477eff", "#f8ff47", "#ff9647"];
+
+    document.querySelectorAll("nav a").forEach((link, index) => {
+      link.addEventListener("click", (e) => {
+        const nav = e.target.closest("nav");
+        const drop = document.createElement("span");
+        drop.classList.add("drop");
+
+        // Position drop in center of clicked link
+        const rect = e.target.getBoundingClientRect();
+        const navRect = nav.getBoundingClientRect();
+        drop.style.left = rect.left + rect.width / 2 - navRect.left + "px";
+        drop.style.top = rect.top + rect.height / 2 - navRect.top + "px";
+
+        // Assign a color from palette
+        drop.style.background = colors[index % colors.length];
+
+        // Set size
+        drop.style.width = "20px";
+        drop.style.height = "20px";
+
+        nav.appendChild(drop);
+
+        // Remove drop after animation
+        drop.addEventListener("animationend", () => drop.remove());
+      });
+    });
+  </script>
+</body>
+</html>

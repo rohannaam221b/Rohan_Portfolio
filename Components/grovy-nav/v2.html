@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Gooey Nav - Vanilla JS</title>
+  <style>
+    :root {
+      --linear-ease: linear(0, 0.068, 0.19 2.7%, 0.804 8.1%, 1.037, 1.199 13.2%, 1.245, 1.27 15.8%, 1.274, 1.272 17.4%, 1.249 19.1%, 0.996 28%, 0.949, 0.928 33.3%, 0.926, 0.933 36.8%, 1.001 45.6%, 1.013, 1.019 50.8%, 1.018 54.4%, 1 63.1%, 0.995 68%, 1.001 85%, 1);
+    }
+
+    body {
+      background: #121212;
+      font-family: sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    nav ul {
+      display: flex;
+      gap: 2rem;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      color: white;
+      text-shadow: 0 1px 1px hsl(205deg 30% 10% / 0.2);
+      position: relative;
+      z-index: 3;
+    }
+
+    li {
+      position: relative;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-shadow: 0 0 1px rgba(0,0,0,0.2);
+    }
+
+    li.active {
+      color: black;
+      text-shadow: none;
+    }
+    li.active::after {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    li::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: 8px;
+      background: white;
+      opacity: 0;
+      transform: scale(0);
+      transition: all 0.3s ease;
+      z-index: -1;
+    }
+
+    li a {
+      display: inline-block;
+      padding: 0.6em 1em;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .effect {
+      position: absolute;
+      opacity: 1;
+      pointer-events: none;
+      display: grid;
+      place-items: center;
+      z-index: 1;
+    }
+
+    .effect.text {
+      color: white;
+      transition: color 0.3s ease;
+    }
+    .effect.text.active {
+      color: black;
+    }
+
+    .effect.filter {
+      filter: blur(7px) contrast(100) blur(0);
+      mix-blend-mode: lighten;
+    }
+    .effect.filter::before {
+      content: "";
+      position: absolute;
+      inset: -75px;
+      background: black;
+      z-index: -2;
+    }
+    .effect.filter::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: white;
+      transform: scale(0);
+      opacity: 0;
+      z-index: -1;
+      border-radius: 9999px;
+    }
+    .effect.active::after {
+      animation: pill 0.3s ease both;
+    }
+
+    @keyframes pill {
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .particle, .point {
+      display: block;
+      opacity: 0;
+      width: 20px;
+      height: 20px;
+      border-radius: 9999px;
+      transform-origin: center;
+    }
+    .particle {
+      position: absolute;
+      top: calc(50% - 8px);
+      left: calc(50% - 8px);
+    }
+    .point {
+      background: var(--color, white);
+      opacity: 1;
+    }
+
+    @keyframes particle {
+      0% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="gooey-container" style="position: relative;">
+    <nav>
+      <ul>
+        <li class="active"><a href="#">Home</a></li>
+        <li><a href="#">Services</a></li>
+        <li><a href="#">Portfolio</a></li>
+        <li><a href="#">About</a></li>
+      </ul>
+    </nav>
+    <span class="effect filter"></span>
+    <span class="effect text"></span>
+  </div>
+
+  <script>
+    const container = document.querySelector('.gooey-container');
+    const nav = container.querySelector('ul');
+    const lis = nav.querySelectorAll('li');
+    const filterEffect = container.querySelector('.effect.filter');
+    const textEffect = container.querySelector('.effect.text');
+    let activeIndex = 0;
+
+    const noise = (n=1) => n/2 - Math.random()*n;
+    const getXY = (distance, i, total) => {
+      const angle = ((360 + noise(8)) / total) * i * (Math.PI/180);
+      return [distance * Math.cos(angle), distance * Math.sin(angle)];
+    };
+
+    function makeParticles(element) {
+      const particleCount = 10;
+      const distances = [90, 10];
+      const r = 100;
+      for (let i=0; i<particleCount; i++) {
+        const [sx, sy] = getXY(distances[0], i, particleCount);
+        const [ex, ey] = getXY(distances[1]+noise(7), i, particleCount);
+        const particle = document.createElement('span');
+        const point = document.createElement('span');
+        particle.classList.add('particle');
+        point.classList.add('point');
+        point.style.setProperty('--color', 'white');
+        particle.appendChild(point);
+        element.appendChild(particle);
+
+        particle.animate([
+          { transform: `translate(${sx}px,${sy}px)`, opacity: 1 },
+          { transform: `translate(${ex}px,${ey}px)`, opacity: 0 }
+        ], { duration: 800, easing: 'ease-out' });
+
+        setTimeout(()=> element.removeChild(particle), 800);
+      }
+    }
+
+    function updateEffectPosition(li) {
+      const containerRect = container.getBoundingClientRect();
+      const pos = li.getBoundingClientRect();
+      const styles = {
+        left: `${pos.x - containerRect.x}px`,
+        top: `${pos.y - containerRect.y}px`,
+        width: `${pos.width}px`,
+        height: `${pos.height}px`
+      };
+      Object.assign(filterEffect.style, styles);
+      Object.assign(textEffect.style, styles);
+      textEffect.innerText = li.innerText;
+    }
+
+    lis.forEach((li, index)=>{
+      li.addEventListener('click', ()=>{
+        if (activeIndex === index) return;
+        lis[activeIndex].classList.remove('active');
+        li.classList.add('active');
+        activeIndex = index;
+
+        updateEffectPosition(li);
+
+        textEffect.classList.remove('active');
+        void textEffect.offsetWidth; // force reflow
+        textEffect.classList.add('active');
+
+        makeParticles(filterEffect);
+      });
+    });
+
+    // initialize
+    updateEffectPosition(lis[0]);
+    textEffect.classList.add('active');
+  </script>
+</body>
+</html>
